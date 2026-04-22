@@ -1,0 +1,1488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Arena — Quizmaster</title>
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;700;900&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f0f4ff;
+  --bg2: #ffffff;
+  --bg3: #e8edf8;
+  --ink: #111827;
+  --ink2: #4b5563;
+  --ink3: #9ca3af;
+  --blue: #2563eb;
+  --blue-l: #dbeafe;
+  --orange: #ea580c;
+  --orange-l: #ffedd5;
+  --green: #16a34a;
+  --green-l: #dcfce7;
+  --red: #dc2626;
+  --red-l: #fee2e2;
+  --yellow: #ca8a04;
+  --yellow-l: #fef9c3;
+  --purple: #7c3aed;
+  --purple-l: #ede9fe;
+  --border: #d1d5db;
+  --radius: 12px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--ink); font-family:'DM Sans',sans-serif; min-height:100vh; }
+
+h1,h2,h3 { font-family:'Exo 2',sans-serif; }
+
+/* ── LAYOUT ── */
+.screen { display:none; min-height:100vh; }
+.screen.active { display:flex; flex-direction:column; }
+
+.top-bar {
+  background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  padding:12px 24px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  flex-wrap:wrap;
+}
+.top-bar-title { font-family:'Exo 2',sans-serif; font-size:18px; font-weight:700; color:var(--blue); }
+.top-bar-scores { display:flex; gap:10px; flex-wrap:wrap; }
+.mini-score {
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:5px 12px;
+  font-size:13px;
+  font-weight:600;
+  display:flex;
+  gap:6px;
+  align-items:center;
+}
+.mini-score-val { font-family:'Exo 2',sans-serif; font-size:15px; color:var(--blue); font-weight:700; }
+
+.page-body { flex:1; padding:24px; display:flex; flex-direction:column; align-items:center; gap:24px; }
+
+/* ── CARDS ── */
+.card {
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:24px;
+  width:100%;
+}
+.card-sm { padding:16px 20px; }
+
+/* ── BUTTONS ── */
+.btn {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:11px 24px;
+  border-radius:8px;
+  font-family:'Exo 2',sans-serif;
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:0.5px;
+  cursor:pointer;
+  border:none;
+  transition:all 0.15s;
+}
+.btn:active { transform:scale(0.97); }
+.btn-blue { background:var(--blue); color:#fff; }
+.btn-blue:hover { background:#1d4ed8; }
+.btn-orange { background:var(--orange); color:#fff; }
+.btn-orange:hover { background:#c2410c; }
+.btn-green { background:var(--green); color:#fff; }
+.btn-green:hover { background:#15803d; }
+.btn-red { background:var(--red); color:#fff; }
+.btn-red:hover { background:#b91c1c; }
+.btn-ghost { background:transparent; border:2px solid var(--border); color:var(--ink2); }
+.btn-ghost:hover { border-color:var(--blue); color:var(--blue); }
+.btn-lg { padding:14px 36px; font-size:16px; }
+.btn-sm { padding:7px 14px; font-size:13px; }
+
+/* ── TAGS / CHIPS ── */
+.chip { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:600; }
+.chip-blue { background:var(--blue-l); color:var(--blue); }
+.chip-orange { background:var(--orange-l); color:var(--orange); }
+.chip-green { background:var(--green-l); color:var(--green); }
+.chip-red { background:var(--red-l); color:var(--red); }
+.chip-yellow { background:var(--yellow-l); color:var(--yellow); }
+.chip-purple { background:var(--purple-l); color:var(--purple); }
+
+/* ── SETUP SCREEN ── */
+#setup-screen { justify-content:center; align-items:center; }
+.setup-wrap { width:100%; max-width:760px; display:flex; flex-direction:column; gap:24px; }
+.logo-area { text-align:center; }
+.logo-area h1 { font-size:clamp(2rem,6vw,3.5rem); font-weight:900; color:var(--blue); }
+.logo-area p { color:var(--ink3); font-size:15px; margin-top:4px; }
+
+.teams-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.team-input-group { display:flex; flex-direction:column; gap:6px; }
+.team-input-group label { font-size:13px; font-weight:600; color:var(--ink2); display:flex; align-items:center; gap:6px; }
+.team-dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
+.dot-1 { background:var(--blue); }
+.dot-2 { background:var(--orange); }
+.dot-3 { background:var(--green); }
+.dot-4 { background:var(--purple); }
+.team-input-group input {
+  padding:10px 14px;
+  border:1.5px solid var(--border);
+  border-radius:8px;
+  font-family:'DM Sans',sans-serif;
+  font-size:15px;
+  color:var(--ink);
+  background:var(--bg);
+  outline:none;
+  transition:border-color 0.2s;
+}
+.team-input-group input:focus { border-color:var(--blue); background:#fff; }
+
+/* ── ROUND SELECTOR ── */
+#round-select-screen { justify-content:flex-start; }
+.round-cards-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; max-width:800px; width:100%; }
+.round-select-card {
+  background:var(--bg2);
+  border:2px solid var(--border);
+  border-radius:16px;
+  padding:24px;
+  cursor:pointer;
+  transition:all 0.2s;
+  text-align:left;
+  position:relative;
+  overflow:hidden;
+}
+.round-select-card:hover { border-color:var(--blue); transform:translateY(-2px); box-shadow:0 8px 24px rgba(37,99,235,0.12); }
+.round-select-card .rsc-num {
+  font-family:'Exo 2',sans-serif;
+  font-size:42px;
+  font-weight:900;
+  line-height:1;
+  margin-bottom:8px;
+}
+.round-select-card .rsc-title { font-family:'Exo 2',sans-serif; font-size:20px; font-weight:700; margin-bottom:6px; }
+.round-select-card .rsc-desc { font-size:13px; color:var(--ink2); line-height:1.5; }
+.rsc-1 .rsc-num { color:var(--blue); }
+.rsc-2 .rsc-num { color:var(--orange); }
+.rsc-3 .rsc-num { color:var(--green); }
+.rsc-tie .rsc-num { color:var(--purple); }
+.round-select-card .rsc-badge {
+  position:absolute; top:16px; right:16px;
+  font-size:11px; font-weight:700; padding:3px 8px; border-radius:20px;
+}
+.rsc-1 .rsc-badge { background:var(--blue-l); color:var(--blue); }
+.rsc-2 .rsc-badge { background:var(--orange-l); color:var(--orange); }
+.rsc-3 .rsc-badge { background:var(--green-l); color:var(--green); }
+.rsc-tie .rsc-badge { background:var(--purple-l); color:var(--purple); }
+
+/* ── PROJECTOR NOTICE ── */
+.projector-notice {
+  background:linear-gradient(135deg,#eff6ff,#dbeafe);
+  border:1.5px solid #bfdbfe;
+  border-radius:10px;
+  padding:14px 20px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  max-width:800px;
+  width:100%;
+}
+.projector-notice .icon { font-size:28px; }
+.projector-notice p { font-size:14px; color:var(--ink2); line-height:1.5; }
+.projector-notice strong { color:var(--blue); }
+
+/* ── GENRE SCREEN ── */
+.genre-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; max-width:640px; width:100%; }
+.genre-card {
+  background:var(--bg2);
+  border:2px solid var(--border);
+  border-radius:12px;
+  padding:20px 14px;
+  text-align:center;
+  cursor:pointer;
+  transition:all 0.2s;
+}
+.genre-card:hover { border-color:var(--blue); transform:translateY(-2px); box-shadow:0 6px 20px rgba(37,99,235,0.1); }
+.genre-card .gi { font-size:36px; margin-bottom:8px; }
+.genre-card .gn { font-family:'Exo 2',sans-serif; font-size:14px; font-weight:700; color:var(--ink); }
+
+/* ── Q-SELECT ── */
+.q-select-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; max-width:540px; width:100%; }
+.q-num-btn {
+  background:var(--bg2);
+  border:2px solid var(--border);
+  border-radius:10px;
+  padding:16px;
+  font-family:'Exo 2',sans-serif;
+  font-size:20px;
+  font-weight:700;
+  color:var(--ink);
+  cursor:pointer;
+  transition:all 0.2s;
+  text-align:center;
+}
+.q-num-btn:hover:not(.used) { border-color:var(--blue); color:var(--blue); transform:scale(1.05); }
+.q-num-btn.used { background:var(--bg3); color:var(--ink3); border-color:var(--border); cursor:not-allowed; opacity:0.5; }
+
+/* ── QUESTION SCREEN ── */
+.q-screen-layout { max-width:840px; width:100%; display:flex; flex-direction:column; gap:16px; }
+.q-header { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+.timer-circle {
+  width:80px; height:80px; border-radius:50%;
+  border:4px solid var(--blue);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Exo 2',sans-serif; font-size:28px; font-weight:900;
+  color:var(--blue);
+  transition:all 0.5s;
+  flex-shrink:0;
+}
+.timer-circle.warn { border-color:var(--orange); color:var(--orange); }
+.timer-circle.danger { border-color:var(--red); color:var(--red); animation:tpulse 0.6s infinite; }
+@keyframes tpulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
+
+.q-meta { flex:1; }
+.q-meta .label { font-size:12px; font-weight:600; color:var(--ink3); letter-spacing:1px; text-transform:uppercase; }
+.q-meta .team-name { font-family:'Exo 2',sans-serif; font-size:24px; font-weight:700; }
+
+.question-text {
+  background:var(--bg2);
+  border:1.5px solid var(--border);
+  border-radius:12px;
+  padding:28px 32px;
+  font-size:clamp(1.1rem,2.5vw,1.5rem);
+  line-height:1.6;
+  font-weight:500;
+  min-height:110px;
+  display:flex;
+  align-items:center;
+}
+
+.answer-box {
+  background:var(--blue-l);
+  border:1.5px solid #93c5fd;
+  border-radius:10px;
+  padding:14px 20px;
+  font-size:16px;
+  font-weight:500;
+  color:var(--blue);
+  display:none;
+}
+.answer-box.show { display:block; }
+
+.pass-chain-bar {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:12px 16px;
+}
+.pass-pill {
+  padding:5px 14px;
+  border-radius:20px;
+  font-size:13px;
+  font-weight:600;
+  background:var(--bg2);
+  border:1.5px solid var(--border);
+  color:var(--ink2);
+}
+.pass-pill.active { background:var(--orange-l); border-color:var(--orange); color:var(--orange); }
+.pass-pill.done-p { background:var(--bg3); color:var(--ink3); text-decoration:line-through; }
+.pass-arrow { color:var(--ink3); font-size:16px; }
+
+.action-row { display:flex; gap:12px; flex-wrap:wrap; }
+
+/* ── BUZZER SCREEN ── */
+.buzzer-layout { max-width:700px; width:100%; display:flex; flex-direction:column; gap:16px; align-items:center; }
+.buzzers-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; width:100%; }
+.buzzer-pad {
+  padding:32px 20px;
+  border-radius:16px;
+  font-family:'Exo 2',sans-serif;
+  font-size:18px;
+  font-weight:700;
+  cursor:pointer;
+  border:2px solid;
+  transition:all 0.15s;
+  text-align:center;
+}
+.buzzer-pad:nth-child(1) { background:var(--blue-l); border-color:var(--blue); color:var(--blue); }
+.buzzer-pad:nth-child(2) { background:var(--orange-l); border-color:var(--orange); color:var(--orange); }
+.buzzer-pad:nth-child(3) { background:var(--green-l); border-color:var(--green); color:var(--green); }
+.buzzer-pad:nth-child(4) { background:var(--purple-l); border-color:var(--purple); color:var(--purple); }
+.buzzer-pad:hover:not(.buzzed) { transform:scale(1.03); box-shadow:0 6px 20px rgba(0,0,0,0.1); }
+.buzzer-pad:active:not(.buzzed) { transform:scale(0.97); }
+.buzzer-pad.buzzed { opacity:0.35; cursor:not-allowed; transform:none; }
+
+.buzzed-banner {
+  background:var(--orange-l);
+  border:2px solid var(--orange);
+  border-radius:12px;
+  padding:14px 24px;
+  font-family:'Exo 2',sans-serif;
+  font-size:22px;
+  font-weight:700;
+  color:var(--orange);
+  text-align:center;
+  width:100%;
+  animation:slideIn 0.3s ease;
+}
+@keyframes slideIn { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
+
+.buzzer-q-panel { width:100%; display:none; }
+.buzzer-q-panel.show { display:flex; flex-direction:column; gap:12px; }
+
+/* ── RAPID SELECT ── */
+.rf-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; max-width:480px; width:100%; }
+.rf-team-btn {
+  padding:20px;
+  border-radius:12px;
+  border:2px solid var(--border);
+  background:var(--bg2);
+  font-family:'Exo 2',sans-serif;
+  font-size:16px;
+  font-weight:700;
+  color:var(--ink);
+  cursor:pointer;
+  transition:all 0.2s;
+}
+.rf-team-btn.selected { border-color:var(--blue); background:var(--blue-l); color:var(--blue); }
+.rf-team-btn:hover { border-color:var(--blue); }
+
+/* ── RAPID SCREEN ── */
+.rapid-layout { max-width:840px; width:100%; display:flex; flex-direction:column; gap:16px; }
+.rapid-header { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+.rapid-timer-big {
+  font-family:'Exo 2',sans-serif;
+  font-size:56px;
+  font-weight:900;
+  color:var(--green);
+  line-height:1;
+}
+.rapid-timer-big.warn { color:var(--orange); }
+.rapid-timer-big.danger { color:var(--red); animation:tpulse 0.5s infinite; }
+.rapid-scores { display:flex; gap:16px; }
+.rapid-score-box {
+  background:var(--bg2);
+  border:2px solid;
+  border-radius:12px;
+  padding:12px 20px;
+  text-align:center;
+  min-width:130px;
+}
+.rapid-score-box:nth-child(1) { border-color:var(--blue); }
+.rapid-score-box:nth-child(2) { border-color:var(--orange); }
+.rsb-name { font-size:12px; font-weight:600; color:var(--ink2); margin-bottom:4px; }
+.rsb-val { font-family:'Exo 2',sans-serif; font-size:36px; font-weight:900; color:var(--ink); }
+
+/* ── TIE SCREEN ── */
+.tie-layout { max-width:700px; width:100%; display:flex; flex-direction:column; gap:16px; align-items:center; }
+.tie-scores { display:flex; gap:30px; justify-content:center; }
+.tie-score-box {
+  text-align:center;
+  background:var(--bg2);
+  border:2px solid var(--border);
+  border-radius:14px;
+  padding:20px 30px;
+  min-width:150px;
+}
+.tsb-name { font-size:13px; font-weight:600; color:var(--ink2); margin-bottom:6px; }
+.tsb-wins { font-family:'Exo 2',sans-serif; font-size:52px; font-weight:900; color:var(--purple); }
+.tsb-label { font-size:12px; color:var(--ink3); margin-top:4px; }
+
+/* ── WINNER ── */
+#winner-screen { align-items:center; justify-content:center; text-align:center; gap:20px; background:linear-gradient(135deg,#eff6ff,#faf5ff); }
+.trophy-big { font-size:100px; animation:float 2.5s ease-in-out infinite; }
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-16px)} }
+.winner-label { font-size:13px; font-weight:600; letter-spacing:4px; text-transform:uppercase; color:var(--ink3); }
+.winner-team { font-family:'Exo 2',sans-serif; font-size:clamp(2rem,6vw,3.5rem); font-weight:900; color:var(--blue); }
+.final-board { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; max-width:700px; }
+.fb-card {
+  background:var(--bg2);
+  border:1.5px solid var(--border);
+  border-radius:12px;
+  padding:16px 24px;
+  text-align:center;
+  flex:1;
+  min-width:130px;
+}
+.fb-card.winner { border-color:var(--blue); background:var(--blue-l); }
+.fb-name { font-size:13px; font-weight:600; color:var(--ink2); margin-bottom:4px; }
+.fb-score { font-family:'Exo 2',sans-serif; font-size:32px; font-weight:900; color:var(--ink); }
+
+/* ── RESULT FLASH ── */
+.result-flash-overlay {
+  position:fixed; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  z-index:500;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity 0.2s;
+}
+.result-flash-overlay.show { opacity:1; }
+.rfo-inner {
+  padding:24px 48px;
+  border-radius:20px;
+  font-family:'Exo 2',sans-serif;
+  font-size:56px;
+  font-weight:900;
+  animation:zoomBounce 0.35s cubic-bezier(0.175,0.885,0.32,1.275);
+}
+.rfo-correct { background:var(--green-l); color:var(--green); border:3px solid var(--green); }
+.rfo-wrong { background:var(--red-l); color:var(--red); border:3px solid var(--red); }
+@keyframes zoomBounce { from{transform:scale(0.4);opacity:0} to{transform:scale(1);opacity:1} }
+
+/* ── PROJECTOR WINDOW BUTTON ── */
+.proj-btn {
+  display:inline-flex; align-items:center; gap:8px;
+  padding:8px 16px;
+  background:var(--blue-l);
+  color:var(--blue);
+  border:1.5px solid #93c5fd;
+  border-radius:8px;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all 0.2s;
+  text-decoration:none;
+}
+.proj-btn:hover { background:#bfdbfe; }
+
+/* heading styles */
+.section-title { font-family:'Exo 2',sans-serif; font-size:22px; font-weight:700; color:var(--ink); }
+.section-sub { font-size:14px; color:var(--ink2); margin-top:4px; }
+
+/* order strip */
+.order-strip { display:flex; gap:8px; flex-wrap:wrap; }
+.order-chip {
+  padding:5px 14px;
+  border-radius:20px;
+  font-size:13px;
+  font-weight:600;
+  background:var(--bg3);
+  border:1.5px solid var(--border);
+  color:var(--ink2);
+}
+.order-chip.cur { background:var(--blue-l); border-color:var(--blue); color:var(--blue); }
+.order-chip.done { opacity:0.4; text-decoration:line-through; }
+
+/* q counter */
+.q-counter-badge {
+  background:var(--blue-l);
+  color:var(--blue);
+  padding:4px 12px;
+  border-radius:20px;
+  font-size:13px;
+  font-weight:700;
+  font-family:'Exo 2',sans-serif;
+}
+</style>
+</head>
+<body>
+
+<!-- RESULT FLASH -->
+<div class="result-flash-overlay" id="rfo">
+  <div class="rfo-inner" id="rfo-text">✓ CORRECT!</div>
+</div>
+
+<!-- ═══════════════ SETUP ═══════════════ -->
+<div class="screen active" id="setup-screen">
+  <div class="page-body" style="justify-content:center;">
+    <div class="setup-wrap">
+      <div class="logo-area">
+        <h1>🏆 QUIZ ARENA</h1>
+        <p>Technology Championship — Quizmaster Console</p>
+      </div>
+
+      <div class="projector-notice">
+        <div class="icon">📺</div>
+        <div>
+          <p><strong>Two-screen setup:</strong> This tab is your <strong>Quizmaster view</strong> — it shows answers and controls. Open the <strong>Projector tab</strong> separately and display that on your projector. The audience sees only questions, timers, and scores — never the answers.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title" style="margin-bottom:16px;">Enter Team Names</div>
+        <div class="teams-grid">
+          <div class="team-input-group">
+            <label><span class="team-dot dot-1"></span>Team 1</label>
+            <input type="text" id="t1" placeholder="Team name...">
+          </div>
+          <div class="team-input-group">
+            <label><span class="team-dot dot-2"></span>Team 2</label>
+            <input type="text" id="t2" placeholder="Team name...">
+          </div>
+          <div class="team-input-group">
+            <label><span class="team-dot dot-3"></span>Team 3</label>
+            <input type="text" id="t3" placeholder="Team name...">
+          </div>
+          <div class="team-input-group">
+            <label><span class="team-dot dot-4"></span>Team 4</label>
+            <input type="text" id="t4" placeholder="Team name...">
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+        <button class="btn btn-blue btn-lg" onclick="startGame()">Start Game →</button>
+        <button class="proj-btn" onclick="openProjector()">📺 Open Projector Window</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ ROUND SELECT ═══════════════ -->
+<div class="screen" id="round-select-screen">
+  <div class="top-bar">
+    <div class="top-bar-title">🏆 Quiz Arena</div>
+    <div class="top-bar-scores" id="rs-scoreboard"></div>
+    <button class="proj-btn" onclick="openProjector()">📺 Projector</button>
+  </div>
+  <div class="page-body">
+    <div class="section-title">Choose Round</div>
+    <div class="round-cards-grid">
+      <div class="round-select-card rsc-1" onclick="goRound(1)">
+        <div class="rsc-badge">4 teams · snake order</div>
+        <div class="rsc-num">01</div>
+        <div class="rsc-title">Passable Round</div>
+        <div class="rsc-desc">Teams pick genre + question. Wrong or pass → next team with less time. Snake order (L→R then R→L).</div>
+      </div>
+      <div class="round-select-card rsc-2" onclick="goRound(2)">
+        <div class="rsc-badge">10 questions · buzzer</div>
+        <div class="rsc-num">02</div>
+        <div class="rsc-title">Buzzer Round</div>
+        <div class="rsc-desc">Random questions from all genres. First to buzz gets 60s. Non-passable — wrong = nobody scores.</div>
+      </div>
+      <div class="round-select-card rsc-3" onclick="goRound(3)">
+        <div class="rsc-badge">2 teams · 3 minutes</div>
+        <div class="rsc-num">03</div>
+        <div class="rsc-title">Rapid Fire</div>
+        <div class="rsc-desc">Select 2 teams. 3-minute countdown. Fire questions rapidly, award points manually.</div>
+      </div>
+      <div class="round-select-card rsc-tie" onclick="goRound('tie')">
+        <div class="rsc-badge">tied teams · first to 3</div>
+        <div class="rsc-num">⚡</div>
+        <div class="rsc-title">Tiebreaker</div>
+        <div class="rsc-desc">Buzzer format. Select tied teams. First team to answer 3 questions correctly wins.</div>
+      </div>
+    </div>
+    <div id="rs-notice" style="font-size:13px;color:var(--ink3);text-align:center;"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ GENRE SELECT ═══════════════ -->
+<div class="screen" id="genre-screen">
+  <div class="top-bar">
+    <div class="top-bar-title" id="gs-team-label">Team Name — Pick Genre</div>
+    <div class="top-bar-scores" id="gs-scoreboard"></div>
+  </div>
+  <div class="page-body">
+    <div class="order-strip" id="gs-order"></div>
+    <div class="section-title">Choose a Genre</div>
+    <div class="genre-grid">
+      <div class="genre-card" onclick="selectGenre('ior')">
+        <div class="gi">🌐</div><div class="gn">IOR</div>
+      </div>
+      <div class="genre-card" onclick="selectGenre('robotics')">
+        <div class="gi">🤖</div><div class="gn">ROBOTICS</div>
+      </div>
+      <div class="genre-card" onclick="selectGenre('cloud')">
+        <div class="gi">☁️</div><div class="gn">CLOUD</div>
+      </div>
+      <div class="genre-card" onclick="selectGenre('ai')">
+        <div class="gi">🧠</div><div class="gn">AI</div>
+      </div>
+      <div class="genre-card" onclick="selectGenre('iq')">
+        <div class="gi">💡</div><div class="gn">IQ</div>
+      </div>
+      <div class="genre-card" onclick="selectRandomGenre()" style="border-style:dashed;border-color:var(--yellow)">
+        <div class="gi">🎲</div><div class="gn" style="color:var(--yellow)">RANDOM</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ Q SELECT ═══════════════ -->
+<div class="screen" id="qselect-screen">
+  <div class="top-bar">
+    <div>
+      <div class="top-bar-title" id="qs-team-label">Team</div>
+      <div style="font-size:13px;color:var(--ink3);" id="qs-genre-label">Genre</div>
+    </div>
+    <div class="top-bar-scores" id="qs-scoreboard"></div>
+  </div>
+  <div class="page-body">
+    <div class="order-strip" id="qs-order"></div>
+    <div class="section-title">Select a Question</div>
+    <div class="q-select-grid" id="q-select-grid"></div>
+    <button class="btn btn-ghost btn-sm" onclick="goRound(1)" style="margin-top:4px;">← Change Genre</button>
+  </div>
+</div>
+
+<!-- ═══════════════ QUESTION (R1) ═══════════════ -->
+<div class="screen" id="question-screen">
+  <div class="top-bar">
+    <div class="top-bar-title">Round 1 — Passable</div>
+    <div class="top-bar-scores" id="q-scoreboard"></div>
+  </div>
+  <div class="page-body">
+    <div class="q-screen-layout">
+      <div class="q-header">
+        <div class="q-meta">
+          <div class="label">Now answering</div>
+          <div class="team-name" id="q-team-name" style="font-family:'Exo 2',sans-serif;font-size:24px;font-weight:700;"></div>
+        </div>
+        <div class="timer-circle" id="q-timer">60</div>
+      </div>
+
+      <div class="question-text" id="q-text">Question...</div>
+
+      <!-- ANSWER (quizmaster only) -->
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button class="btn btn-ghost btn-sm" onclick="toggleAnswer('answer-box-r1')">👁 Show Answer</button>
+        <span style="font-size:12px;color:var(--ink3);">Only visible on this screen</span>
+      </div>
+      <div class="answer-box" id="answer-box-r1"></div>
+
+      <div class="pass-chain-bar" id="pass-chain-bar"></div>
+
+      <div class="action-row">
+        <button class="btn btn-green" onclick="markAnswer(true)">✓ Correct (+10)</button>
+        <button class="btn btn-red" onclick="markAnswer(false)">✗ Wrong</button>
+        <button class="btn btn-orange" id="pass-btn" onclick="passQuestion()">⟶ Pass</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ BUZZER (R2) ═══════════════ -->
+<div class="screen" id="buzzer-screen">
+  <div class="top-bar">
+    <div class="top-bar-title">Round 2 — Buzzer Round</div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div class="q-counter-badge" id="r2-q-counter">Q 1/10</div>
+      <div class="top-bar-scores" id="r2-scoreboard"></div>
+    </div>
+  </div>
+  <div class="page-body">
+    <div class="buzzer-layout">
+      <div id="buzzed-banner-area" style="width:100%;min-height:54px;"></div>
+      <div class="buzzers-grid" id="buzzers-grid"></div>
+      <div class="buzzer-q-panel" id="buzzer-q-panel">
+        <div class="question-text" id="buzzer-q-text" style="margin-bottom:12px;"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <button class="btn btn-ghost btn-sm" onclick="toggleAnswer('answer-box-r2')">👁 Show Answer</button>
+          <span style="font-size:12px;color:var(--ink3);">Only visible here</span>
+        </div>
+        <div class="answer-box" id="answer-box-r2"></div>
+        <div class="q-header" style="margin-top:12px;">
+          <div class="action-row">
+            <button class="btn btn-green" onclick="buzzerAnswer(true)">✓ Correct (+15)</button>
+            <button class="btn btn-red" onclick="buzzerAnswer(false)">✗ Wrong / Pass</button>
+          </div>
+          <div class="timer-circle" id="buzzer-timer">60</div>
+        </div>
+      </div>
+      <div id="r2-waiting" style="text-align:center;color:var(--ink3);font-size:15px;padding:16px;">Waiting for a team to buzz...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ RAPID SELECT ═══════════════ -->
+<div class="screen" id="rapidselect-screen">
+  <div class="top-bar">
+    <div class="top-bar-title">Round 3 — Rapid Fire</div>
+    <div class="top-bar-scores" id="rfs-scoreboard"></div>
+  </div>
+  <div class="page-body">
+    <div class="section-title">Select 2 Teams</div>
+    <div class="section-sub">These 2 teams will compete in rapid fire for 3 minutes.</div>
+    <div class="rf-grid" id="rf-grid"></div>
+    <button class="btn btn-green btn-lg" onclick="startRapidFire()">▶ Start Rapid Fire</button>
+  </div>
+</div>
+
+<!-- ═══════════════ RAPID FIRE ═══════════════ -->
+<div class="screen" id="rapid-screen">
+  <div class="top-bar">
+    <div class="top-bar-title">Round 3 — Rapid Fire</div>
+    <div class="rapid-timer-big" id="rapid-timer">3:00</div>
+  </div>
+  <div class="page-body">
+    <div class="rapid-layout">
+      <div class="rapid-scores" id="rapid-scores"></div>
+      <div class="question-text" id="rapid-q-text">Ready...</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button class="btn btn-ghost btn-sm" onclick="toggleAnswer('answer-box-rapid')">👁 Show Answer</button>
+      </div>
+      <div class="answer-box" id="answer-box-rapid"></div>
+      <div class="action-row" id="rapid-score-btns"></div>
+      <button class="btn btn-ghost" onclick="nextRapidQ()">⟶ Next Question</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ TIE BREAKER ═══════════════ -->
+<div class="screen" id="tie-screen">
+  <div class="top-bar">
+    <div class="top-bar-title">⚡ Tiebreaker Round</div>
+    <div class="top-bar-scores" id="tie-scoreboard"></div>
+  </div>
+  <div class="page-body">
+    <div class="tie-layout">
+      <div class="tie-scores" id="tie-scores"></div>
+      <div id="tie-buzz-area" style="width:100%;">
+        <div id="tie-buzzed-banner" style="min-height:50px;margin-bottom:12px;"></div>
+        <div class="buzzers-grid" id="tie-buzzers-grid"></div>
+      </div>
+      <div class="buzzer-q-panel" id="tie-q-panel">
+        <div class="question-text" id="tie-q-text" style="margin-bottom:12px;"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <button class="btn btn-ghost btn-sm" onclick="toggleAnswer('answer-box-tie')">👁 Show Answer</button>
+        </div>
+        <div class="answer-box" id="answer-box-tie"></div>
+        <div class="q-header" style="margin-top:12px;">
+          <div class="action-row">
+            <button class="btn btn-green" onclick="tieAnswer(true)">✓ Correct</button>
+            <button class="btn btn-red" onclick="tieAnswer(false)">✗ Wrong</button>
+          </div>
+          <div class="timer-circle" id="tie-timer">60</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ WINNER ═══════════════ -->
+<div class="screen" id="winner-screen">
+  <div class="page-body" style="justify-content:center;align-items:center;gap:20px;text-align:center;">
+    <div class="trophy-big">🏆</div>
+    <div class="winner-label">Champion</div>
+    <div class="winner-team" id="winner-name">Team</div>
+    <div class="final-board" id="final-board"></div>
+    <button class="btn btn-blue btn-lg" onclick="location.reload()">🔄 Play Again</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+//  QUESTIONS
+// ══════════════════════════════════════
+const QUESTIONS = {
+  ior:[
+    {q:"What does CIDR stand for in networking?",a:"Classless Inter-Domain Routing"},
+    {q:"What is the default port for HTTPS?",a:"443"},
+    {q:"What OSI layer does TCP operate on?",a:"Layer 4 – Transport Layer"},
+    {q:"What does DNS stand for?",a:"Domain Name System"},
+    {q:"What is the IPv4 loopback address?",a:"127.0.0.1"},
+    {q:"What type of cable transmits data using light pulses?",a:"Fiber optic cable"},
+    {q:"What protocol is used for secure remote login?",a:"SSH (Secure Shell)"},
+    {q:"What does NAT stand for in networking?",a:"Network Address Translation"},
+    {q:"What is the maximum theoretical speed of USB 3.2 Gen 2x2?",a:"20 Gbps"},
+    {q:"Which layer of the OSI model handles MAC addresses?",a:"Layer 2 – Data Link Layer"}
+  ],
+  robotics:[
+    {q:"What sensor uses sound waves to measure distance?",a:"Ultrasonic sensor"},
+    {q:"What does DOF stand for in robotics?",a:"Degrees of Freedom"},
+    {q:"What is the name of Boston Dynamics' famous bipedal robot?",a:"Atlas"},
+    {q:"What type of motor gives precise angular position control?",a:"Servo motor"},
+    {q:"What does ROS stand for?",a:"Robot Operating System"},
+    {q:"Which sensor measures orientation and rotation?",a:"Gyroscope / IMU"},
+    {q:"What is inverse kinematics used for?",a:"Calculating joint angles needed to reach a target end-effector position"},
+    {q:"What is a LIDAR sensor used for?",a:"Measuring distances using laser light for mapping and navigation"},
+    {q:"What does PID stand for in control systems?",a:"Proportional, Integral, Derivative"},
+    {q:"What is the term for a robot's end-effector?",a:"The tool or device at the end of a robotic arm (gripper, welding tip, etc.)"}
+  ],
+  cloud:[
+    {q:"What does IaaS stand for?",a:"Infrastructure as a Service"},
+    {q:"Which AWS service runs serverless functions?",a:"AWS Lambda"},
+    {q:"What is the Google Cloud equivalent of AWS S3?",a:"Google Cloud Storage"},
+    {q:"What does CDN stand for?",a:"Content Delivery Network"},
+    {q:"What is Kubernetes used for?",a:"Container orchestration – managing containerized applications"},
+    {q:"What does SLA stand for in cloud services?",a:"Service Level Agreement"},
+    {q:"What is the difference between vertical and horizontal scaling?",a:"Vertical = more power to one machine; Horizontal = adding more machines"},
+    {q:"What cloud model is used exclusively by one organization?",a:"Private cloud"},
+    {q:"What does DevOps combine?",a:"Development and IT Operations"},
+    {q:"What is Docker used for?",a:"Containerizing applications with their dependencies"}
+  ],
+  ai:[
+    {q:"What does GPT stand for?",a:"Generative Pre-trained Transformer"},
+    {q:"What is the purpose of an activation function in a neural network?",a:"To introduce non-linearity into the network"},
+    {q:"What does CNN stand for in deep learning?",a:"Convolutional Neural Network"},
+    {q:"What is overfitting in machine learning?",a:"When a model performs well on training data but poorly on unseen data"},
+    {q:"What is gradient descent?",a:"An optimization algorithm that minimizes loss by iteratively adjusting weights"},
+    {q:"What does NLP stand for?",a:"Natural Language Processing"},
+    {q:"What is the transformer architecture best known for?",a:"The attention mechanism for processing sequences in parallel"},
+    {q:"What is reinforcement learning?",a:"An ML approach where an agent learns by interacting with an environment to maximize rewards"},
+    {q:"What is the difference between supervised and unsupervised learning?",a:"Supervised uses labeled data; Unsupervised finds patterns in unlabeled data"},
+    {q:"What is a word embedding?",a:"A dense vector representation of words in a continuous space"}
+  ],
+  iq:[
+    {q:"A train travels 60 km in 40 minutes. What is its speed in km/h?",a:"90 km/h"},
+    {q:"If you have 3 apples and take away 2, how many apples do YOU have?",a:"2 (the ones you took)"},
+    {q:"What comes next: 2, 6, 12, 20, 30, ?",a:"42 — pattern is n×(n+1)"},
+    {q:"A bat and ball cost $1.10. The bat costs $1 more than the ball. How much is the ball?",a:"$0.05 (5 cents)"},
+    {q:"How many squares are in a 4×4 grid (including overlapping squares)?",a:"30 squares (16+9+4+1)"},
+    {q:"What is the next number: 1, 1, 2, 3, 5, 8, 13, ?",a:"21 — Fibonacci sequence"},
+    {q:"If all Bloops are Razzies and all Razzies are Lazzies, are all Bloops Lazzies?",a:"Yes"},
+    {q:"A man drives A→B at 30 mph and returns at 60 mph. What is his average speed for the trip?",a:"40 mph (harmonic mean)"},
+    {q:"I have 2 coins totaling 30 cents. One is not a nickel. What are the coins?",a:"A quarter and a nickel (the OTHER one is not a nickel)"},
+    {q:"What 3-digit number is a perfect cube and ends in 5?",a:"125 (5³)"}
+  ]
+};
+
+function allQuestions(){
+  let a=[];
+  for(let g in QUESTIONS) QUESTIONS[g].forEach((q,i)=>a.push({...q,genre:g,idx:i}));
+  return a;
+}
+function shuffle(arr){let a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+// ══════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════
+const S = {
+  teams: ['Team 1','Team 2','Team 3','Team 4'],
+  scores: [0,0,0,0],
+  // R1
+  r1:{
+    snakeOrder:[0,1,2,3,3,2,1,0],
+    idx:0,
+    used:{ior:[],robotics:[],cloud:[],ai:[],iq:[]},
+    genre:null,
+    question:null,
+    passChain:[],
+    passIdx:0,
+    timer:null, sec:60
+  },
+  // R2
+  r2:{questions:[],qIdx:0,buzzerTeam:null,timer:null,sec:60},
+  // R3
+  r3:{selected:[],qPool:[],qIdx:0,teamScores:[0,0],timer:null},
+  // Tie
+  tie:{teams:[],wins:[],questions:[],qIdx:0,buzzerTeam:null,timer:null,sec:60},
+};
+
+// projector window reference
+let projWin = null;
+
+// ══════════════════════════════════════
+//  PROJECTOR
+// ══════════════════════════════════════
+function openProjector(){
+  const blob = new Blob([PROJECTOR_HTML], {type: 'text/html'});
+  const url = URL.createObjectURL(blob);
+  projWin = window.open(url, 'QuizProjector', 'width=1280,height=720');
+  if(!projWin) { alert('Please allow popups for this page to open the projector window.'); return; }
+  // Revoke the blob URL after the window has loaded to free memory
+  projWin.addEventListener('load', () => URL.revokeObjectURL(url));
+}
+
+function projSend(data){
+  if(projWin && !projWin.closed){
+    projWin.postMessage(JSON.stringify(data), '*');
+  }
+}
+
+// ══════════════════════════════════════
+//  AUDIO
+// ══════════════════════════════════════
+let ac;
+function getAC(){if(!ac)ac=new(window.AudioContext||window.webkitAudioContext)();return ac;}
+function beep(type){
+  try{
+    const a=getAC(),o=a.createOscillator(),g=a.createGain();
+    o.connect(g);g.connect(a.destination);
+    const t=a.currentTime;
+    if(type==='correct'){
+      const notes=[523,659,784,1047];
+      notes.forEach((f,i)=>{const oo=a.createOscillator(),gg=a.createGain();oo.connect(gg);gg.connect(a.destination);oo.frequency.value=f;gg.gain.setValueAtTime(0.25,t+i*0.1);gg.gain.exponentialRampToValueAtTime(0.001,t+i*0.1+0.25);oo.start(t+i*0.1);oo.stop(t+i*0.1+0.25);});
+    }else if(type==='wrong'){
+      o.type='sawtooth';o.frequency.setValueAtTime(200,t);o.frequency.linearRampToValueAtTime(80,t+0.4);
+      g.gain.setValueAtTime(0.35,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.4);o.start(t);o.stop(t+0.4);
+    }else if(type==='buzz'){
+      o.type='square';o.frequency.value=880;
+      g.gain.setValueAtTime(0.4,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.3);o.start(t);o.stop(t+0.3);
+    }else if(type==='tick'){
+      o.frequency.value=1200;g.gain.setValueAtTime(0.08,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.05);o.start(t);o.stop(t+0.05);
+    }else if(type==='timeout'){
+      o.type='sawtooth';o.frequency.setValueAtTime(440,t);o.frequency.linearRampToValueAtTime(110,t+0.8);
+      g.gain.setValueAtTime(0.5,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.8);o.start(t);o.stop(t+0.8);
+    }else if(type==='fanfare'){
+      [523,659,784,1047,1319].forEach((f,i)=>{const oo=a.createOscillator(),gg=a.createGain();oo.connect(gg);gg.connect(a.destination);oo.frequency.value=f;gg.gain.setValueAtTime(0.2,t+i*0.12);gg.gain.exponentialRampToValueAtTime(0.001,t+i*0.12+0.3);oo.start(t+i*0.12);oo.stop(t+i*0.12+0.3);});
+    }
+  }catch(e){}
+}
+
+// ══════════════════════════════════════
+//  UTILITIES
+// ══════════════════════════════════════
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+
+function flashResult(correct){
+  const el=document.getElementById('rfo'),txt=document.getElementById('rfo-text');
+  el.classList.remove('rfo-correct','rfo-wrong');
+  el.classList.add('show',correct?'rfo-correct':'rfo-wrong');
+  txt.textContent=correct?'✓ CORRECT!':'✗ WRONG';
+  beep(correct?'correct':'wrong');
+  setTimeout(()=>el.classList.remove('show','rfo-correct','rfo-wrong'),1200);
+}
+
+function renderScoreboard(elId){
+  const el=document.getElementById(elId);
+  if(!el)return;
+  el.innerHTML=S.teams.map((n,i)=>`<div class="mini-score"><span>${n}</span><span class="mini-score-val">${S.scores[i]}</span></div>`).join('');
+}
+
+function clearTimers(){
+  clearInterval(S.r1.timer);clearInterval(S.r2.timer);clearInterval(S.r3.timer);clearInterval(S.tie.timer);
+}
+
+function startTimer(elId,sec,onTick,onDone){
+  clearTimers();
+  const el=document.getElementById(elId);
+  let rem=sec;
+  el.textContent=(elId==='rapid-timer')?fmt(rem):rem;
+  el.className=elId==='rapid-timer'?'rapid-timer-big':'timer-circle';
+  const iv=setInterval(()=>{
+    rem--;
+    el.textContent=(elId==='rapid-timer')?fmt(rem):rem;
+    if(rem<=10){el.classList.add(rem<=5?'danger':'warn');}
+    if(rem<=10)beep('tick');
+    if(onTick)onTick(rem);
+    if(rem<=0){clearInterval(iv);onDone();}
+  },1000);
+  return iv;
+}
+function fmt(s){return `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;}
+
+function toggleAnswer(id){
+  const b=document.getElementById(id);
+  b.classList.toggle('show');
+}
+
+function orderStrip(elId){
+  const el=document.getElementById(elId);
+  if(!el)return;
+  el.innerHTML=S.r1.snakeOrder.map((ti,i)=>`<div class="order-chip ${i===S.r1.idx?'cur':''} ${i<S.r1.idx?'done':''}">${i+1}. ${S.teams[ti]}</div>`).join('');
+}
+
+// ══════════════════════════════════════
+//  SETUP
+// ══════════════════════════════════════
+function startGame(){
+  S.teams=['t1','t2','t3','t4'].map((id,i)=>document.getElementById(id).value.trim()||`Team ${i+1}`);
+  S.scores=[0,0,0,0];
+  show('round-select-screen');
+  renderScoreboard('rs-scoreboard');
+}
+
+function goRound(r){
+  if(r===1){show('genre-screen');S.r1.idx=0;orderStrip('gs-order');const ti=S.r1.snakeOrder[0];document.getElementById('gs-team-label').textContent=S.teams[ti]+' — Pick Genre';renderScoreboard('gs-scoreboard');}
+  else if(r===2){startRound2();}
+  else if(r===3){showRapidSelect();}
+  else if(r==='tie'){showTieSetup();}
+}
+
+// ══════════════════════════════════════
+//  ROUND 1
+// ══════════════════════════════════════
+function selectGenre(genre){
+  S.r1.genre=genre;
+  const ti=S.r1.snakeOrder[S.r1.idx];
+  document.getElementById('qs-team-label').textContent=S.teams[ti];
+  document.getElementById('qs-genre-label').textContent=genre.toUpperCase()+' — Pick a question number';
+  renderScoreboard('qs-scoreboard');
+  orderStrip('qs-order');
+  const used=S.r1.used[genre];
+  const grid=document.getElementById('q-select-grid');
+  grid.innerHTML='';
+  for(let i=0;i<10;i++){
+    const b=document.createElement('button');
+    b.className='q-num-btn'+(used.includes(i)?' used':'');
+    b.textContent=i+1;
+    if(!used.includes(i))b.onclick=()=>loadQuestionR1(genre,i);
+    grid.appendChild(b);
+  }
+  show('qselect-screen');
+  // tell projector which genre was picked and which questions are available
+  projSend({type:'genreSelected',team:S.teams[S.r1.snakeOrder[S.r1.idx]],genre:genre,used:S.r1.used[genre],total:QUESTIONS[genre].length,scores:S.teams.map((n,i)=>({name:n,score:S.scores[i]}))});
+}
+
+function selectRandomGenre(){
+  const gs=Object.keys(QUESTIONS).filter(g=>S.r1.used[g].length<10);
+  selectGenre(gs.length?gs[Math.floor(Math.random()*gs.length)]:Object.keys(QUESTIONS)[0]);
+}
+
+function loadQuestionR1(genre,qi){
+  S.r1.used[genre].push(qi);
+  S.r1.question=QUESTIONS[genre][qi];
+  const ti=S.r1.snakeOrder[S.r1.idx];
+  S.r1.passChain=[ti,...[0,1,2,3].filter(x=>x!==ti)];
+  S.r1.passIdx=0;
+  showQuestionR1();
+}
+
+function showQuestionR1(){
+  const secs=[60,45,30,20][S.r1.passIdx]||20;
+  const ti=S.r1.passChain[S.r1.passIdx];
+  document.getElementById('q-team-name').textContent=S.teams[ti];
+  document.getElementById('q-text').textContent=S.r1.question.q;
+  document.getElementById('answer-box-r1').textContent='Answer: '+S.r1.question.a;
+  document.getElementById('answer-box-r1').classList.remove('show');
+
+  // pass chain
+  const bar=document.getElementById('pass-chain-bar');
+  bar.innerHTML=S.r1.passChain.map((t,i)=>{
+    let cls='pass-pill';
+    if(i===S.r1.passIdx)cls+=' active';
+    if(i<S.r1.passIdx)cls+=' done-p';
+    return `<div class="${cls}">${S.teams[t]}</div>${i<S.r1.passChain.length-1?'<div class="pass-arrow">→</div>':''}`;
+  }).join('');
+
+  document.getElementById('pass-btn').style.display=S.r1.passIdx<S.r1.passChain.length-1?'':'none';
+
+  renderScoreboard('q-scoreboard');
+
+  // projector
+  projSend({type:'question',team:S.teams[ti],question:S.r1.question.q,timer:secs,round:'Round 1 — Passable',scores:S.teams.map((n,i)=>({name:n,score:S.scores[i]}))});
+
+  S.r1.timer=startTimer('q-timer',secs,null,()=>{
+    beep('timeout');
+    projSend({type:'timeout'});
+    if(S.r1.passIdx<S.r1.passChain.length-1)passQuestion();
+    else endR1Question();
+  });
+  show('question-screen');
+}
+
+function passQuestion(){
+  clearTimers();
+  S.r1.passIdx++;
+  if(S.r1.passIdx>=S.r1.passChain.length){endR1Question();return;}
+  showQuestionR1();
+}
+
+function markAnswer(correct){
+  clearTimers();
+  if(correct){
+    const ti=S.r1.passChain[S.r1.passIdx];
+    S.scores[ti]+=10;
+    flashResult(true);
+    projSend({type:'result',correct:true,answer:S.r1.question.a,scores:S.teams.map((n,i)=>({name:n,score:S.scores[i]}))});
+    setTimeout(()=>endR1Question(),1800);
+  } else {
+    flashResult(false);
+    projSend({type:'passed',scores:S.teams.map((n,i)=>({name:n,score:S.scores[i]}))});
+    setTimeout(()=>{
+      if(S.r1.passIdx<S.r1.passChain.length-1) passQuestion();
+      else endR1Question();
+    },1000);
+  }
+}
+
+function endR1Question(){
+  S.r1.passIdx=0;
+  S.r1.idx++;
+  if(S.r1.idx>=S.r1.snakeOrder.length){
+    // back to round select
+    renderScoreboard('rs-scoreboard');
+    document.getElementById('rs-notice').textContent='Round 1 complete! Choose what comes next.';
+    projSend({type:'roundEnd',message:'Round 1 Complete!',scores:S.teams.map((n,i)=>({name:n,score:S.scores[i]}))});
+    show('round-select-screen');
+    return;
+  }
+  const ti=S.r1.snakeOrder[S.r1.idx];
+  document.getElementById('gs-team-label').textContent=S.teams[ti]+' — Pick Genre';
+  orderStrip('gs-order');
+  renderScoreboard('gs-scoreboard');
+  projSend({type:'pickGenre',team:S.teams[ti],scores:S.teams.map((n,i)=>({name:n,score:S.scores[i]})),genres:Object.keys(QUESTIONS).map(g=>({id:g,used:S.r1.used[g].length,total:QUESTIONS[g].length}))});
+  show('genre-screen');
+}
+
+// ══════════════════════════════════════
+//  ROUND 2
+// ══════════════════════════════════════
+function startRound2(){
+  S.r2.questions=shuffle(allQuestions()).slice(0,10);
+  S.r2.qIdx=0;S.r2.buzzerTeam=null;
+  showBuzzerScreen();
+}
+
+function showBuzzerScreen(){
+  renderScoreboard('r2-scoreboard');
+  document.getElementById('r2-q-counter').textContent=`Q ${S.r2.qIdx+1}/10`;
+  document.getElementById('buzzed-banner-area').innerHTML='';
+  document.getElementById('r2-waiting').style.display='block';
+  const panel=document.getElementById('buzzer-q-panel');
+  panel.classList.remove('show');
+  document.getElementById('answer-box-r2').classList.remove('show');
+
+  const grid=document.getElementById('buzzers-grid');
+  grid.innerHTML=S.teams.map((n,i)=>`<button class="buzzer-pad" id="bp-${i}" onclick="teamBuzz(${i})">${n}</button>`).join('');
+
+  projSend({type:'buzzerReady',qNum:S.r2.qIdx+1,scores:S.teams.map((n,i)=>({name:n,score:S.scores[i]}))});
+  show('buzzer-screen');
+}
+
+function teamBuzz(ti){
+  if(S.r2.buzzerTeam!==null)return;
+  S.r2.buzzerTeam=ti;
+  beep('buzz');
+  document.querySelectorAll('.buzzer-pad').forEach(b=>b.classList.add('buzzed'));
+  document.getElementById('buzzed-banner-area').innerHTML=`<div class="buzzed-banner">🔔 ${S.teams[ti]} buzzed!</div>`;
+  document.getElementById('r2-waiting').style.display='none';
+  const q=S.r2.questions[S.r2.qIdx];
+  document.getElementById('buzzer-q-text').textContent=q.q;
+  document.getElementById('answer-box-r2').textContent='Answer: '+q.a;
+  const panel=document.getElementById('buzzer-q-panel');
+  panel.classList.add('show');
+
+  projSend({type:'question',team:S.teams[ti],question:q.q,timer:60,round:'Round 2 — Buzzer',scores:S.teams.map((n,i)=>({name:n,score:S.scores[i]}))});
+
+  S.r2.timer=startTimer('buzzer-timer',60,null,()=>{
+    beep('timeout');
+    projSend({type:'timeout'});
+    buzzerAnswer(false);
+  });
+}
+
+function buzzerAnswer(correct){
+  clearTimers();
+  if(correct&&S.r2.buzzerTeam!==null)S.scores[S.r2.buzzerTeam]+=15;
+  flashResult(correct);
+  const q=S.r2.questions[S.r2.qIdx];
+  projSend({type:'result',correct,answer:correct?q.a:null,scores:S.teams.map((n,i)=>({name:n,score:S.scores[i]}))});
+  setTimeout(()=>{
+    S.r2.buzzerTeam=null;S.r2.qIdx++;
+    if(S.r2.qIdx>=10){
+      renderScoreboard('rs-scoreboard');
+      document.getElementById('rs-notice').textContent='Round 2 complete!';
+      projSend({type:'roundEnd',message:'Round 2 Complete!',scores:S.teams.map((n,i)=>({name:n,score:S.scores[i]}))});
+      show('round-select-screen');
+    }else showBuzzerScreen();
+  },1200);
+}
+
+// ══════════════════════════════════════
+//  ROUND 3
+// ══════════════════════════════════════
+function showRapidSelect(){
+  renderScoreboard('rfs-scoreboard');
+  S.r3.selected=[];
+  document.getElementById('rf-grid').innerHTML=S.teams.map((n,i)=>`<button class="rf-team-btn" id="rf-${i}" onclick="toggleRF(${i})">${n}</button>`).join('');
+  show('rapidselect-screen');
+}
+
+function toggleRF(i){
+  const b=document.getElementById('rf-'+i),idx=S.r3.selected.indexOf(i);
+  if(idx!==-1){S.r3.selected.splice(idx,1);b.classList.remove('selected');}
+  else if(S.r3.selected.length<2){S.r3.selected.push(i);b.classList.add('selected');}
+}
+
+function startRapidFire(){
+  if(S.r3.selected.length!==2){alert('Select exactly 2 teams!');return;}
+  S.r3.qPool=shuffle(allQuestions());
+  S.r3.qIdx=0;S.r3.teamScores=[0,0];
+  showRapidScreen();
+}
+
+function showRapidScreen(){
+  const [t0,t1]=S.r3.selected;
+  document.getElementById('rapid-scores').innerHTML=`
+    <div class="rapid-score-box"><div class="rsb-name">${S.teams[t0]}</div><div class="rsb-val" id="rs-0">${S.r3.teamScores[0]}</div></div>
+    <div class="rapid-score-box"><div class="rsb-name">${S.teams[t1]}</div><div class="rsb-val" id="rs-1">${S.r3.teamScores[1]}</div></div>`;
+  document.getElementById('rapid-score-btns').innerHTML=`
+    <button class="btn btn-blue" onclick="rfPoint(0)">+1 ${S.teams[t0]}</button>
+    <button class="btn btn-orange" onclick="rfPoint(1)">+1 ${S.teams[t1]}</button>`;
+  showNextRapidQ();
+  S.r3.timer=startTimer('rapid-timer',180,null,()=>{beep('timeout');endRapidFire();});
+  show('rapid-screen');
+  projSend({type:'rapidFire',team1:S.teams[t0],team2:S.teams[t1],scores:S.teams.map((n,i)=>({name:n,score:S.scores[i]}))});
+}
+
+function showNextRapidQ(){
+  const q=S.r3.qPool[S.r3.qIdx%S.r3.qPool.length];
+  document.getElementById('rapid-q-text').textContent=q.q;
+  document.getElementById('answer-box-rapid').textContent='Answer: '+q.a;
+  document.getElementById('answer-box-rapid').classList.remove('show');
+  projSend({type:'rapidQuestion',question:q.q});
+  S.r3.qIdx++;
+}
+
+function nextRapidQ(){showNextRapidQ();}
+
+function rfPoint(rfIdx){
+  S.r3.teamScores[rfIdx]+=10;
+  S.scores[S.r3.selected[rfIdx]]+=10;
+  document.getElementById('rs-'+rfIdx).textContent=S.r3.teamScores[rfIdx];
+  flashResult(true);
+  const t0=S.r3.selected[0],t1=S.r3.selected[1];
+  projSend({type:'rapidScore',t0name:S.teams[t0],t1name:S.teams[t1],t0score:S.r3.teamScores[0],t1score:S.r3.teamScores[1]});
+  setTimeout(showNextRapidQ,300);
+}
+
+function endRapidFire(){
+  clearTimers();
+  renderScoreboard('rs-scoreboard');
+  document.getElementById('rs-notice').textContent='Round 3 complete!';
+  projSend({type:'roundEnd',message:'Rapid Fire Over!',scores:S.teams.map((n,i)=>({name:n,score:S.scores[i]}))});
+  show('round-select-screen');
+}
+
+// ══════════════════════════════════════
+//  TIE
+// ══════════════════════════════════════
+function showTieSetup(){
+  // Manual team selection: show all teams as buzzer buttons
+  S.tie.teams=S.teams.map((_,i)=>i); // all 4 by default; quizmaster can pick
+  S.tie.wins=new Array(4).fill(0);
+  S.tie.questions=shuffle(allQuestions());
+  S.tie.qIdx=0;S.tie.buzzerTeam=null;
+  showTieScreen();
+}
+
+function showTieScreen(){
+  renderScoreboard('tie-scoreboard');
+  const ts=document.getElementById('tie-scores');
+  ts.innerHTML=S.teams.map((n,i)=>`
+    <div class="tie-score-box">
+      <div class="tsb-name">${n}</div>
+      <div class="tsb-wins" id="tw-${i}">${S.tie.wins[i]}</div>
+      <div class="tsb-label">wins (need 3)</div>
+    </div>`).join('');
+  document.getElementById('tie-buzzers-grid').innerHTML=S.teams.map((n,i)=>`<button class="buzzer-pad" id="tb-${i}" onclick="tieBuzz(${i})">${n}</button>`).join('');
+  document.getElementById('tie-buzzed-banner').innerHTML='';
+  const panel=document.getElementById('tie-q-panel');
+  panel.classList.remove('show');
+  document.getElementById('answer-box-tie').classList.remove('show');
+  projSend({type:'tieBreaker',scores:S.teams.map((n,i)=>({name:n,score:S.scores[i]})),wins:S.tie.wins});
+  show('tie-screen');
+}
+
+function tieBuzz(ti){
+  if(S.tie.buzzerTeam!==null)return;
+  S.tie.buzzerTeam=ti;
+  beep('buzz');
+  document.querySelectorAll('#tie-buzzers-grid .buzzer-pad').forEach(b=>b.classList.add('buzzed'));
+  document.getElementById('tie-buzzed-banner').innerHTML=`<div class="buzzed-banner">🔔 ${S.teams[ti]} buzzed!</div>`;
+  const q=S.tie.questions[S.tie.qIdx%S.tie.questions.length];
+  document.getElementById('tie-q-text').textContent=q.q;
+  document.getElementById('answer-box-tie').textContent='Answer: '+q.a;
+  document.getElementById('answer-box-tie').classList.remove('show');
+  document.getElementById('tie-q-panel').classList.add('show');
+  projSend({type:'question',team:S.teams[ti],question:q.q,timer:60,round:'Tiebreaker'});
+  S.tie.timer=startTimer('tie-timer',60,null,()=>{beep('timeout');tieAnswer(false);});
+}
+
+function tieAnswer(correct){
+  clearTimers();
+  if(correct&&S.tie.buzzerTeam!==null){
+    const ti=S.tie.buzzerTeam;
+    S.tie.wins[ti]++;
+    document.getElementById('tw-'+ti).textContent=S.tie.wins[ti];
+    flashResult(true);
+    if(S.tie.wins[ti]>=3){
+      setTimeout(()=>{beep('fanfare');showWinner(ti);},1200);
+      return;
+    }
+  }else{flashResult(false);}
+  projSend({type:'result',correct,answer:correct?(S.tie.questions[S.tie.qIdx%S.tie.questions.length]||{}).a:null,wins:S.tie.wins});
+  S.tie.buzzerTeam=null;
+  S.tie.qIdx++;
+  setTimeout(showTieScreen,1200);
+}
+
+// ══════════════════════════════════════
+//  WINNER
+// ══════════════════════════════════════
+function showWinner(ti){
+  beep('fanfare');
+  document.getElementById('winner-name').textContent=S.teams[ti];
+  const sorted=[...S.teams.map((n,i)=>({n,i,s:S.scores[i]}))].sort((a,b)=>b.s-a.s);
+  document.getElementById('final-board').innerHTML=sorted.map(t=>`
+    <div class="fb-card ${t.i===ti?'winner':''}">
+      <div class="fb-name">${t.i===ti?'🥇 ':''} ${t.n}</div>
+      <div class="fb-score">${t.s}</div>
+    </div>`).join('');
+  projSend({type:'winner',team:S.teams[ti],scores:sorted});
+  show('winner-screen');
+}
+
+// ══════════════════════════════════════
+//  PROJECTOR HTML (injected into popup)
+// ══════════════════════════════════════
+const PROJECTOR_HTML = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Quiz Arena — Projector</title>
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;700;900&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#f8fafc;color:#111827;font-family:'DM Sans',sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+.proj-header{background:#ffffff;border-bottom:2px solid #e2e8f0;padding:14px 36px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 1px 4px rgba(0,0,0,0.06);}
+.proj-title{font-family:'Exo 2',sans-serif;font-size:20px;font-weight:800;color:#2563eb;letter-spacing:0.5px;}
+.proj-scores{display:flex;gap:10px;flex-wrap:wrap;}
+.ps-chip{background:#f1f5f9;border:1.5px solid #cbd5e1;border-radius:10px;padding:6px 16px;font-size:14px;font-weight:600;display:flex;gap:8px;align-items:center;color:#374151;}
+.ps-val{font-family:'Exo 2',sans-serif;font-size:19px;color:#2563eb;font-weight:800;}
+.proj-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 48px;gap:24px;text-align:center;}
+.proj-state{font-size:13px;letter-spacing:3px;text-transform:uppercase;color:#94a3b8;font-weight:700;background:#f1f5f9;padding:6px 18px;border-radius:20px;border:1px solid #e2e8f0;}
+.proj-team{font-family:'Exo 2',sans-serif;font-size:clamp(2rem,5vw,3.2rem);font-weight:900;color:#2563eb;}
+.proj-question{font-size:clamp(1.5rem,3vw,2.4rem);line-height:1.55;font-weight:600;max-width:960px;color:#1e293b;background:#fff;border:2px solid #e2e8f0;border-radius:20px;padding:28px 40px;box-shadow:0 2px 12px rgba(0,0,0,0.06);}
+.proj-answer{font-size:clamp(1.2rem,2.5vw,2rem);font-weight:700;max-width:960px;background:#dcfce7;color:#15803d;border:2px solid #86efac;border-radius:16px;padding:20px 36px;animation:zb 0.4s cubic-bezier(0.175,0.885,0.32,1.275);}
+.proj-timer{font-family:'Exo 2',sans-serif;font-size:110px;font-weight:900;color:#2563eb;line-height:1;}
+.proj-timer.warn{color:#ea580c;}
+.proj-timer.danger{color:#dc2626;animation:pulse 0.5s infinite;}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+.proj-result{font-family:'Exo 2',sans-serif;font-size:72px;font-weight:900;animation:zb 0.35s cubic-bezier(0.175,0.885,0.32,1.275);}
+.proj-result.correct{color:#16a34a;}
+.proj-result.wrong{color:#dc2626;}
+.proj-result.passed{color:#ea580c;font-size:52px;}
+@keyframes zb{from{transform:scale(0.4);opacity:0}to{transform:scale(1);opacity:1}}
+/* Genre picker display */
+.genre-display{display:flex;flex-direction:column;align-items:center;gap:20px;width:100%;max-width:900px;}
+.genre-grid-proj{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;width:100%;}
+.genre-tile{border-radius:14px;padding:18px 10px;text-align:center;border:2px solid #e2e8f0;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,0.05);}
+.genre-tile.active{border-color:#2563eb;background:#eff6ff;transform:scale(1.06);box-shadow:0 4px 16px rgba(37,99,235,0.15);}
+.genre-tile .gt-icon{font-size:32px;margin-bottom:6px;}
+.genre-tile .gt-name{font-family:'Exo 2',sans-serif;font-size:13px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.5px;}
+.genre-tile .gt-avail{font-size:12px;color:#64748b;margin-top:3px;}
+.genre-tile.active .gt-name{color:#2563eb;}
+/* Question number grid */
+.q-num-grid-proj{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;max-width:600px;}
+.qn-tile{width:52px;height:52px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Exo 2',sans-serif;font-size:20px;font-weight:800;border:2px solid;}
+.qn-tile.avail{background:#eff6ff;border-color:#93c5fd;color:#1d4ed8;}
+.qn-tile.used{background:#f1f5f9;border-color:#cbd5e1;color:#94a3b8;text-decoration:line-through;opacity:0.5;}
+/* Buzzer ready */
+.buzz-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:640px;width:100%;}
+.buzz-team{padding:26px 20px;border-radius:16px;font-family:'Exo 2',sans-serif;font-size:24px;font-weight:700;border:2px solid;}
+.buzz-team:nth-child(1){background:#eff6ff;border-color:#2563eb;color:#2563eb;}
+.buzz-team:nth-child(2){background:#fff7ed;border-color:#ea580c;color:#ea580c;}
+.buzz-team:nth-child(3){background:#f0fdf4;border-color:#16a34a;color:#16a34a;}
+.buzz-team:nth-child(4){background:#faf5ff;border-color:#7c3aed;color:#7c3aed;}
+/* Rapid fire */
+.rapid-box{background:#fff;border:2px solid #e2e8f0;border-radius:20px;padding:24px 48px;display:flex;gap:48px;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,0.06);}
+.rb-team{text-align:center;}
+.rb-name{font-size:15px;color:#64748b;margin-bottom:6px;font-weight:600;}
+.rb-score{font-family:'Exo 2',sans-serif;font-size:60px;font-weight:900;color:#111827;}
+/* Winner */
+.winner-big{font-family:'Exo 2',sans-serif;font-size:clamp(3rem,8vw,6rem);font-weight:900;color:#2563eb;}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
+/* Pass banner */
+.pass-banner{background:#fff7ed;border:2px solid #fdba74;border-radius:14px;padding:16px 32px;font-family:'Exo 2',sans-serif;font-size:26px;font-weight:800;color:#ea580c;animation:zb 0.3s ease;}
+</style>
+</head>
+<body>
+<div class="proj-header">
+  <div class="proj-title">🏆 QUIZ ARENA</div>
+  <div class="proj-scores" id="proj-scores"></div>
+</div>
+<div class="proj-body" id="proj-body">
+  <div class="proj-state">Waiting for quizmaster...</div>
+</div>
+<script>
+const GENRE_META={ior:{icon:'🌐',name:'IOR'},robotics:{icon:'🤖',name:'ROBOTICS'},cloud:{icon:'☁️',name:'CLOUD'},ai:{icon:'🧠',name:'AI'},iq:{icon:'💡',name:'IQ'}};
+let timerIv;
+window.addEventListener('message',e=>{
+  try{
+    const d=JSON.parse(e.data);
+    if(d.scores)updateScores(d.scores);
+    const b=document.getElementById('proj-body');
+    clearInterval(timerIv);
+
+    if(d.type==='question'){
+      b.innerHTML=\`
+        <div class="proj-state">\${d.round}</div>
+        <div class="proj-team">\${d.team}</div>
+        <div class="proj-question">\${d.question}</div>
+        <div class="proj-timer" id="pt">\${d.timer}</div>\`;
+      let rem=d.timer;
+      timerIv=setInterval(()=>{rem--;const t=document.getElementById('pt');if(t){t.textContent=rem;if(rem<=5)t.className='proj-timer danger';else if(rem<=15)t.className='proj-timer warn';if(rem<=0)clearInterval(timerIv);}},1000);
+
+    }else if(d.type==='result'){
+      if(d.correct){
+        b.innerHTML=\`<div class="proj-result correct">✓ CORRECT!</div>\${d.answer?'<div class="proj-answer">💡 '+d.answer+'</div>':''}\`;
+        setTimeout(()=>{b.innerHTML='<div class="proj-state">Next question...</div>';},3000);
+      } else {
+        b.innerHTML=\`<div class="proj-result wrong">✗ WRONG</div>\`;
+        setTimeout(()=>{b.innerHTML='<div class="proj-state">...</div>';},1800);
+      }
+
+    }else if(d.type==='passed'){
+      b.innerHTML=\`<div class="pass-banner">⟶ Question Passed!</div>\`;
+
+    }else if(d.type==='pickGenre'){
+      const tiles=(d.genres||[]).map(g=>{
+        const m=GENRE_META[g.id]||{icon:'❓',name:g.id.toUpperCase()};
+        const left=g.total-g.used;
+        return \`<div class="genre-tile"><div class="gt-icon">\${m.icon}</div><div class="gt-name">\${m.name}</div><div class="gt-avail">\${left} left</div></div>\`;
+      }).join('');
+      b.innerHTML=\`
+        <div class="proj-state">Round 1 — Passable</div>
+        <div class="proj-team">\${d.team} is choosing a genre</div>
+        <div class="genre-display">
+          <div class="genre-grid-proj">\${tiles}</div>
+        </div>\`;
+
+    }else if(d.type==='genreSelected'){
+      const m=GENRE_META[d.genre]||{icon:'❓',name:d.genre.toUpperCase()};
+      const nums=Array.from({length:d.total},(_,i)=>{
+        const isUsed=d.used.includes(i);
+        return \`<div class="qn-tile \${isUsed?'used':'avail'}">\${i+1}</div>\`;
+      }).join('');
+      b.innerHTML=\`
+        <div class="proj-state">Round 1 — Passable</div>
+        <div class="proj-team">\${d.team}</div>
+        <div style="font-size:28px;font-weight:700;color:#374151;">\${m.icon} \${m.name}</div>
+        <div style="font-size:15px;color:#64748b;font-weight:500;">Pick a question number</div>
+        <div class="q-num-grid-proj">\${nums}</div>\`;
+
+    }else if(d.type==='buzzerReady'){
+      b.innerHTML=\`<div class="proj-state">Round 2 — Buzzer Round · Q\${d.qNum}/10</div><div style="font-size:48px;margin:8px 0;">🔔</div><div style="font-family:'Exo 2',sans-serif;font-size:42px;font-weight:900;color:#2563eb;">BUZZ IN!</div><div class="buzz-grid" id="bz-grid"></div>\`;
+
+    }else if(d.type==='timeout'){
+      b.innerHTML=\`<div class="proj-result wrong">⏰ TIME!</div>\`;
+      setTimeout(()=>{b.innerHTML='<div class="proj-state">...</div>';},1800);
+
+    }else if(d.type==='roundEnd'){
+      b.innerHTML=\`<div class="proj-result correct" style="font-size:52px;">\${d.message}</div>\`;
+
+    }else if(d.type==='rapidFire'){
+      b.innerHTML=\`<div class="proj-state">Round 3 — Rapid Fire</div><div class="rapid-box"><div class="rb-team"><div class="rb-name">\${d.team1}</div><div class="rb-score" id="rp0">0</div></div><div style="font-family:'Exo 2',sans-serif;font-size:36px;color:#94a3b8;font-weight:700;">VS</div><div class="rb-team"><div class="rb-name">\${d.team2}</div><div class="rb-score" id="rp1">0</div></div></div>\`;
+
+    }else if(d.type==='rapidQuestion'){
+      const rq=document.createElement('div');rq.className='proj-question';rq.style.marginTop='16px';rq.textContent=d.question;
+      const cb=document.getElementById('proj-body');const ex=cb.querySelector('.proj-question');if(ex)ex.replaceWith(rq);else cb.appendChild(rq);
+
+    }else if(d.type==='rapidScore'){
+      const r0=document.getElementById('rp0'),r1=document.getElementById('rp1');
+      if(r0)r0.textContent=d.t0score;if(r1)r1.textContent=d.t1score;
+
+    }else if(d.type==='tieBreaker'){
+      const wins=(d.wins||[]).map((w,i)=>\`<div style="text-align:center;padding:12px 24px;background:#fff;border:2px solid #e2e8f0;border-radius:14px;min-width:120px;"><div style="font-size:13px;color:#64748b;font-weight:600;">\${d.scores&&d.scores[i]?d.scores[i].name:'Team '+(i+1)}</div><div style="font-family:'Exo 2',sans-serif;font-size:48px;font-weight:900;color:#7c3aed;">\${w}</div><div style="font-size:11px;color:#94a3b8;">wins</div></div>\`).join('');
+      b.innerHTML=\`<div class="proj-state">⚡ Tiebreaker Round</div><div style="font-family:'Exo 2',sans-serif;font-size:32px;font-weight:800;color:#374151;">First to 3 wins! 🏆</div><div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;">\${wins}</div>\`;
+
+    }else if(d.type==='winner'){
+      b.innerHTML=\`<div style="font-size:80px;animation:float 2s ease-in-out infinite;">🏆</div><div class="proj-state">CHAMPION</div><div class="winner-big">\${d.team}</div>\`;
+    }
+  }catch(err){console.error(err);}
+});
+function updateScores(scores){
+  const el=document.getElementById('proj-scores');
+  if(el)el.innerHTML=scores.map(s=>\`<div class="ps-chip"><span>\${s.name}</span><span class="ps-val">\${s.score}</span></div>\`).join('');
+}
+<\/script>
+</body>
+</html>`;
+</script>
+</body>
+</html>
